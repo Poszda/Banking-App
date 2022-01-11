@@ -16,12 +16,16 @@ public class Card extends JPanel {
 	private String name;
 	private String cvv;
 	private Date expirationDate;
+	private boolean blocked;
 	
-	public Card(String number, String name, String cvv, Date expirationDate) {
+	JLabel cardImage; 
+	
+	public Card(String number, String name, String cvv, Date expirationDate,boolean blocked) {
 		this.number = number;
 		this.name = name;
 		this.cvv = cvv;
 		this.expirationDate = expirationDate;
+		this.blocked = blocked;
 		
 		setBackground(new Color(245,245,245));
 		setLayout(null);
@@ -50,13 +54,26 @@ public class Card extends JPanel {
 		CardCVV.setBounds(282, 236, 30, 13);
 		add(CardCVV);
 		
-		JLabel cardImage = new JLabel("");
+		cardImage = new JLabel("");
 		cardImage.setHorizontalAlignment(SwingConstants.CENTER);
-		cardImage.setIcon(new ImageIcon(Card.class.getResource("/images/card-final.png")));
+		cardImage.setIcon(new ImageIcon(Card.class.getResource(this.blocked == false?"/images/card-final.png":"/images/card-final-blocked.png")));
 		cardImage.setBounds(0, 0, 480, 300);
 		add(cardImage);
 	}
 	
+	//GETTERS AND SETTERS
+	
+	public boolean isBlocked() {
+		return blocked;
+	}
+
+	public void setBlocked(boolean blocked) {
+		this.blocked = blocked;
+		//extra - schimb si imaginea
+		cardImage.setIcon(new ImageIcon(Card.class.getResource(this.blocked?"/images/card-final-blocked.png":"/images/card-final.png")));
+
+	}
+
 	//FUNCTIONS
 	
 	public String formatCardNumber(){

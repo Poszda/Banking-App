@@ -34,12 +34,17 @@ public class CardPage extends JPanel implements MouseListener {
 	private String clientCardName = "";
 	private String clientCardCVV = "";
 	private Date clientCardExpirationDate = new Date(0);
+	private boolean clientCardBlocked = false;
 	
 	private Connection myConn = null;
 	private Statement stmt = null;
 	private ResultSet rez = null;
 	
 	JLabel copyToClipboardBtn;
+	JLabel blockUnblockCardbtn;
+	JLabel ifCardIsBlockedText;
+	
+	Card card;
 	
 	public CardPage(int userID) {
 		
@@ -55,6 +60,7 @@ public class CardPage extends JPanel implements MouseListener {
 				clientCardName = rez.getString("full_name");
 				clientCardCVV = rez.getString("cvv");
 				clientCardExpirationDate = rez.getDate("expiration_date");
+				clientCardBlocked = rez.getBoolean("blocked");
 			}
 			
 		}
@@ -85,7 +91,7 @@ public class CardPage extends JPanel implements MouseListener {
         setBackground(new Color(245,245,245));
         setLayout(null);
         
-        Card card = new Card(this.clientCardNumber,this.clientCardName,this.clientCardCVV,this.clientCardExpirationDate);
+        card = new Card(this.clientCardNumber,this.clientCardName,this.clientCardCVV,this.clientCardExpirationDate,this.clientCardBlocked);
         card.setSize(480, 300);
         card.setLocation(50, 110);
         add(card);
@@ -105,9 +111,16 @@ public class CardPage extends JPanel implements MouseListener {
         copyToClipboardBtn.setFont(new Font("Tahoma", Font.PLAIN, 16));
         copyToClipboardBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         copyToClipboardBtn.setIcon(new ImageIcon(CardPage.class.getResource("/images/icons8-copy-30.png")));
-        copyToClipboardBtn.setBounds(75, 500, 281, 29);
+        copyToClipboardBtn.setBounds(75, 500, 281, 30);
         copyToClipboardBtn.addMouseListener(this);
         add(copyToClipboardBtn);
+        
+        blockUnblockCardbtn = new JLabel(this.clientCardBlocked == false?"   Lost your Card? Block it now":"   Found your Card? Unblock it now");
+        blockUnblockCardbtn.setIcon(new ImageIcon(CardPage.class.getResource(this.clientCardBlocked?"/images/icons8-lock-30.png":"/images/icons8-unlock-30-2.png")));
+        blockUnblockCardbtn.setFont(new Font("Tahoma", Font.PLAIN, 16));
+        blockUnblockCardbtn.setBounds(75, 555, 372, 30);
+        blockUnblockCardbtn.addMouseListener(this);
+        add(blockUnblockCardbtn);
         
         JLabel coin1 = new JLabel("");
         coin1.setIcon(new ImageIcon(CardPage.class.getResource("/images/coin3.png")));
@@ -133,8 +146,15 @@ public class CardPage extends JPanel implements MouseListener {
         coin5.setIcon(new ImageIcon(CardPage.class.getResource("/images/coin5.png")));
         coin5.setBounds(987, 209, 87, 90);
         add(coin5);
+        
+        ifCardIsBlockedText = new JLabel("This card is unavailable");
+        ifCardIsBlockedText.setFont(new Font("Tahoma", Font.PLAIN, 12));
+        ifCardIsBlockedText.setBounds(231, 420, 125, 13);
+        ifCardIsBlockedText.setVisible(this.clientCardBlocked?true:false);
+        add(ifCardIsBlockedText);
+        
 	}
-
+	
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		if(e.getSource() == copyToClipboardBtn) {
@@ -142,12 +162,35 @@ public class CardPage extends JPanel implements MouseListener {
 			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 			clipboard.setContents(stringSelection, null);
 		}
+		else if(e.getSource() == blockUnblockCardbtn) {
+			if (clientCardBlocked == false) {
+				updateDatabaseBlockedStatus(true);
+				this.clientCardBlocked = true;
+				blockUnblockCardbtn.setIcon(new ImageIcon(CardPage.class.getResource("/images/icons8-lock-30.png")));
+				blockUnblockCardbtn.setText("   Found your Card? Unblock it now");
+				ifCardIsBlockedText.setVisible(true);
+				card.setBlocked(true);
+				
+			}
+			else {
+				updateDatabaseBlockedStatus(false);
+				this.clientCardBlocked = false;
+				blockUnblockCardbtn.setIcon(new ImageIcon(CardPage.class.getResource("/images/icons8-unlock-30-2.png")));
+				blockUnblockCardbtn.setText("   Lost your Card? Block it now");
+				ifCardIsBlockedText.setVisible(false);
+				card.setBlocked(false);
+			}
+		}
+		
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
 		if(e.getSource() == copyToClipboardBtn) {
 			copyToClipboardBtn.setForeground(new Color(9,188,138));
+		}
+		else if(e.getSource() == blockUnblockCardbtn) {
+			blockUnblockCardbtn.setForeground(new Color(9,188,138));
 		}
 		
 	}
@@ -156,6 +199,9 @@ public class CardPage extends JPanel implements MouseListener {
 	public void mouseReleased(MouseEvent e) {
 		if(e.getSource() == copyToClipboardBtn) {
 			copyToClipboardBtn.setForeground(Color.BLACK);
+		}
+		else if(e.getSource() == blockUnblockCardbtn) {
+			blockUnblockCardbtn.setForeground(Color.BLACK);
 		}
 	}
 
@@ -168,6 +214,43 @@ public class CardPage extends JPanel implements MouseListener {
 	@Override
 	public void mouseExited(MouseEvent e) {
 		// TODO Auto-generated method stub
+		
+	}
+	
+	
+	//FUNCTIONS
+	public void updateDatabaseBlockedStatus(boolean val){
+		//DATABASE CONNECTON
+		try {
+			myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/banking_app","root","");
+			stmt = myConn.createStatement();
+			stmt.executeUpdate("UPDATE `cards` SET blocked = "+ val + " WHERE id_client = "+this.userID+"");
+			System.out.println("UPDATE `cards` SET blocked = "+ val + " WHERE id_client = "+this.userID+"");
+		}
+		catch (Exception exc) {
+			exc.printStackTrace();
+		}
+		finally {
+			if(stmt != null)
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			if(rez != null)
+				try {
+					rez.close();
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+			if(myConn != null)
+				try {
+					myConn.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+		}
+		
 		
 	}
 }
