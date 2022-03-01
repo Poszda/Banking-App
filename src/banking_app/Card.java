@@ -77,7 +77,6 @@ public class Card extends JPanel {
 	//FUNCTIONS
 	
 	public String formatCardNumber(){
-		
 		return(this.number.substring(0,4) + "   " + this.number.substring(4,8) + "   "
 		+ this.number.substring(8,12) + "   " + this.number.substring(12,16));
 	}
@@ -85,7 +84,7 @@ public class Card extends JPanel {
     public String formatExpirationDate() {
     	DateFormat df = new SimpleDateFormat("MM/dd/yyyy");  
     	String text = df.format(this.expirationDate);
-		return text.substring(0,5);
+    	return(text.substring(3,5) + "/" + text.substring(8,10));
      }
 
 }

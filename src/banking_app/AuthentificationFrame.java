@@ -11,14 +11,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-public class AuthentificationFrame extends JFrame implements ActionListener, MouseListener, KeyListener  { //focus listener
+public class AuthentificationFrame extends JFrame implements ActionListener, MouseListener  { //focus listener
 
 	private JPanel contentPane;
 	
@@ -120,6 +121,7 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 		loginButton.setBackground(new Color(9,188,138));
 		loginButton.setFont(new Font("Tahoma", Font.PLAIN, 16));
 		loginButton.setBounds(100, 286, 150, 45);
+		loginButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		panel_login.add(loginButton);
 		
 		passwordFieldLogin = new JPasswordField();
@@ -137,6 +139,7 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 		lbLoginText2.setForeground(new Color(9,188,138));
 		lbLoginText2.setFont(new Font("Tahoma", Font.PLAIN, 14));
 		lbLoginText2.setBounds(10, 378, 136, 17);
+		lbLoginText2.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		panel_login.add(lbLoginText2);
 		
 		//CONTAINER SIGN IN
@@ -178,10 +181,10 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 		signButton.setBackground(new Color(9,188,138));
 		signButton.setFont(new Font("Tahoma", Font.PLAIN, 16));
 		signButton.setBounds(100, 501, 150, 45);
+		signButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		panel_sign.add(signButton);
 		
 		passwordFieldSign = new JPasswordField();
-		passwordFieldSign.addKeyListener(this);
 		passwordFieldSign.setFont(new Font("Tahoma", Font.PLAIN, 16));
 		passwordFieldSign.setBounds(0, 352, 350,45);
 		panel_sign.add(passwordFieldSign);
@@ -196,6 +199,7 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 		lbSignText2.setForeground(new Color(9,188,138));
 		lbSignText2.setFont(new Font("Tahoma", Font.PLAIN, 14));
 		lbSignText2.setBounds(129, 563, 136, 17);
+		lbSignText2.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		panel_sign.add(lbSignText2);
 		
 		lbSignPasswordCheck = new JLabel("Re-type Password*");
@@ -241,6 +245,7 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 		lbCloseImg.addMouseListener(this);
 		ImageIcon closeImg = new ImageIcon(this.getClass().getResource("/images/close_icon2.png"));
 		lbCloseImg.setIcon(closeImg);
+		lbCloseImg.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		lbCloseImg.setBounds(543,25, 32, 32);
 		panel_right.add(lbCloseImg);
 		
@@ -259,15 +264,6 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 			exc.printStackTrace();
 		}
 		
-		/*ImageIcon closeImg2 = new ImageIcon(this.getClass().getResource("singlebanner.jpg"));
-		lblNewLabel = new JLabel(closeImg2);
-		//lblNewLabel.setIcon(closeImg2);
-		lblNewLabel.setBounds(10, 186, 441, 391);
-		panel_right.add(lblNewLabel);*/
-		
-	    
-	    //.setIcon(closeImg);
-	   // panel_right.add(imgLabel);
 		
 		setVisible(true);
 	}
@@ -280,10 +276,10 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 			String userPassword = passwordFieldLogin.getText();
 			
 			try {
-			rez = stmt.executeQuery("SELECT * FROM `users` WHERE Email = '" + userEmail + "' and Password = '" + userPassword+"'");
+			rez = stmt.executeQuery("SELECT * FROM `users` WHERE email = '" + userEmail + "' and password = '" + userPassword+"'");
 			if(rez.next()){	
 				//GET USER ID FOR PASSING IT TO HomeFrame
-				int userId = rez.getInt("Id");
+				int userId = rez.getInt("id_client");
 				
 				//CLOSE DATABASE CONNECTION
 				if(myConn != null) myConn.close();
@@ -292,9 +288,10 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 				if(ps != null)ps.close();
 				
 				//MOVE TO HomeFrame
-				this.setVisible(false);
+				//this.setVisible(false);
 				HomeFrame h = new HomeFrame(userId);
 				h.setVisible(true);
+				this.dispose();
 				}
 			}
 			catch (Exception exc) {
@@ -309,21 +306,24 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 			String userPasswordCheck = passwordFieldSignCheck.getText();
 			String userSecurityCode = textFieldSignSecurityCode.getText().strip();
 			// form validation
+			
 			if(userEmail.isEmpty() || userLastName.isEmpty() || userPassword.isEmpty() || userPasswordCheck.isEmpty() || userSecurityCode.isEmpty()) 
 				JOptionPane.showMessageDialog(this, "There is an empty field");
+			else if(checkEmailValidation(userEmail) == false) 
+				JOptionPane.showMessageDialog(this, "Try a valid email");
 			else if(userPassword.equals(userPasswordCheck) == false)
 				JOptionPane.showMessageDialog(this, "Passwords do not match");
 			else if(userPassword.length() < 6)
 				JOptionPane.showMessageDialog(this, "Passwords must have more then 5 characters");
 			else { 
 				try { // trying to create the accounut
-					rez = stmt.executeQuery("SELECT * FROM `clients` WHERE Nume = '" + userLastName + "' and Security_code = '" + userSecurityCode+"'");
+					rez = stmt.executeQuery("SELECT * FROM `clients` WHERE last_name = '" + userLastName + "' and security_code = '" + userSecurityCode+"'");
 					if(rez.next()){			 // if input data match a client from our clients table of database	
-						int userId = rez.getInt("Id"); // we get that client id
+						int userId = rez.getInt("id"); // we get that client id
 						rez.close(); //oricum se inchide in mod normal cand folosesc rez2
-						rez2 = stmt.executeQuery("SELECT * FROM `users` WHERE Id = '" + userId + "'");
+						rez2 = stmt.executeQuery("SELECT * FROM `users` WHERE id_client = '" + userId + "'");
 						if(!rez2.next()) {  // if client hasn't already an user account,we create the account
-						ps = myConn.prepareStatement("INSERT INTO users (Id,Email,Password) VALUES (?,?,?)");
+						ps = myConn.prepareStatement("INSERT INTO users (id_client,email,password) VALUES (?,?,?)");
 						ps.setInt(1,userId);
 						ps.setString(2,userEmail);   
 						ps.setString(3,userPassword);
@@ -353,6 +353,14 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 					}
 			}
 		}
+	}
+	
+	//FUNCTIONS
+	public boolean checkEmailValidation(String email){
+	    Pattern pattern = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+	    Matcher matcher = pattern.matcher(email);
+	    boolean matchFound = matcher.find();
+	    return matchFound;
 	}
 
 	@Override
@@ -397,25 +405,4 @@ public class AuthentificationFrame extends JFrame implements ActionListener, Mou
 		
 	}
 	
-	//KEY LISTENER
-	@Override
-	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void keyPressed(KeyEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-		if(e.getSource() == passwordFieldSign) {
-			System.out.println("works");
-		}
-		
-	}
 }

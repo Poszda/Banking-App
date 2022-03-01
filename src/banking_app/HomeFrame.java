@@ -52,7 +52,6 @@ public class HomeFrame extends JFrame implements MouseListener {
 	
 	private JPanel content;
 	
-	
 	private JPanel main;  //first page
 	private CardPage cardPage; // second page
 	private AboutPage aboutPage; //third page
@@ -79,7 +78,7 @@ public class HomeFrame extends JFrame implements MouseListener {
 	private ResultSet rez2 = null;
 	private PreparedStatement ps = null;
 
-    public HomeFrame(int userID) throws SQLException {
+    public HomeFrame(int userID) throws SQLException {    	
     	this.userID = userID;
     	
 		//DATABASE CONNECTON
@@ -87,6 +86,7 @@ public class HomeFrame extends JFrame implements MouseListener {
 			myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/banking_app","root","");
 			stmt = myConn.createStatement();
 			stmt2 = myConn.createStatement();
+			
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();
@@ -94,7 +94,7 @@ public class HomeFrame extends JFrame implements MouseListener {
 		
 		rez = stmt.executeQuery("SELECT * FROM `clients` WHERE id=" + this.userID +""); // poate un join aici
 		if(rez.next()){
-			this.userFirstName = rez.getString("Prenume");
+			this.userFirstName = rez.getString("first_name");
 			this.userBalance = rez.getFloat("account_balance");
 		}
 		//------- GUI ------
@@ -311,7 +311,7 @@ public class HomeFrame extends JFrame implements MouseListener {
        // CARD PAGE
         cardPage = new CardPage(this.userID);
         aboutPage = new AboutPage();
-        accountPage = new AccountPage();
+        accountPage = new AccountPage(this);
         //content.add(cardPage, BorderLayout.CENTER);
         setVisible(true);
 
@@ -406,8 +406,8 @@ public class HomeFrame extends JFrame implements MouseListener {
 					JOptionPane.showMessageDialog(this, "Nu puteti face un transfer tot in contul dvs");
 				else{
 				//INSERAM TRANZACTIA IN BAZA DE DATE
-				ps = myConn.prepareStatement("INSERT INTO `transactions` (id_giver,id_receiver,amount) VALUES (?,?,?)");
-				ps.setInt(1,this.userID);
+				ps = myConn.prepareStatement("INSERT INTO `transactions` (id_giver,id_receiver,amount) VALUES (?,?,?)"); // ????
+				ps.setInt(1,this.userID);	//???
 				ps.setInt(2,otherClientID);
 				ps.setFloat(3,moneyAmount); 
 				ps.execute();
@@ -516,7 +516,7 @@ public class HomeFrame extends JFrame implements MouseListener {
 			if(typeOfTransaction.equals("withdrawn")) { // daca userul a dat bani din cont
 				rez2 = stmt2.executeQuery("SELECT * FROM `clients` WHERE id=" + rez.getInt("id_receiver") +"");
 				rez2.next();
-				name = rez2.getString("Prenume") + " " + rez2.getString("Nume");
+				name = rez2.getString("first_name") + " " + rez2.getString("last_name");
 			}
 			else if(typeOfTransaction.equals("deposit") && rez.getInt("id_giver") == 0) { //inseamna ca am primit de la banca
 				name = "bankitself";
@@ -525,7 +525,7 @@ public class HomeFrame extends JFrame implements MouseListener {
 			else { //inseamna ca a primit de la cineva
 				rez2 = stmt2.executeQuery("SELECT * FROM `clients` WHERE id=" + rez.getInt("id_giver") +"");
 				rez2.next();
-				name = rez2.getString("Prenume") + " " + rez2.getString("Nume");
+				name = rez2.getString("first_name") + " " + rez2.getString("last_name");
 			}
 			transactionsList.add(new Transaction(name,typeOfTransaction,data,amount));
 		}
@@ -553,4 +553,16 @@ public class HomeFrame extends JFrame implements MouseListener {
     	informationReturned.add(interestRate);
     	return (ArrayList) informationReturned;
     }
+
+    //GETTERS AND SETTERS
+	public int getUserID() {
+		return userID;
+	}
+
+	public void setUserID(int userID) {
+		this.userID = userID;
+	}
+    
+   
 }
+

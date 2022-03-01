@@ -22,15 +22,12 @@ public class Transaction extends JPanel {
 	private String typeOfTransaction;
 	private String data;
 	private double sum;
-	/**
-	 * Create the panel.
-	 */
+
 	public Transaction(String name, String typeOfTransaction, String data, double sum) {
 		this.name = name;
 		this.typeOfTransaction = typeOfTransaction;
 		this.data = data;
 		this.sum = sum;
-		//System.out.println(name + data +typeOfTransaction+ sum);
 				
 		setBackground(Color.WHITE);
 		setMaximumSize(new Dimension(32767, 60));
@@ -83,8 +80,8 @@ public class Transaction extends JPanel {
 	}
 	public String obtainTransactionIcon() {
 		if(this.typeOfTransaction.equals("withdrawn"))
-			return("/images/withdrawn.png");
-		return("/images/deposit.png");
+			return("/images/withdrawnx_red.png");
+		return("/images/depositx.png");
 	}
 	public String obtainTransactionInvolvedClient() {
 		if(this.typeOfTransaction.equals("withdrawn"))

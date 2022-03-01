@@ -50,17 +50,18 @@ public class CardPage extends JPanel implements MouseListener {
 		
 		this.userID = userID; // trebuie sa schimb peste tot 'userID' in 'clientID'
 		
-		//DATABASE CONNECTON
+		//INITIALISE VARIABLES
 		try {
 			myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/banking_app","root","");
 			stmt = myConn.createStatement();
-			rez = stmt.executeQuery("SELECT * FROM `cards` WHERE id=" + this.userID +"");
+			rez = stmt.executeQuery("SELECT * FROM `cards` WHERE id_client=" + this.userID +"");
 			if(rez.next()){
 				clientCardNumber = rez.getString("number");
 				clientCardName = rez.getString("full_name");
 				clientCardCVV = rez.getString("cvv");
 				clientCardExpirationDate = rez.getDate("expiration_date");
 				clientCardBlocked = rez.getBoolean("blocked");
+				
 			}
 			
 		}
@@ -91,6 +92,8 @@ public class CardPage extends JPanel implements MouseListener {
         setBackground(new Color(245,245,245));
         setLayout(null);
         
+        
+        
         card = new Card(this.clientCardNumber,this.clientCardName,this.clientCardCVV,this.clientCardExpirationDate,this.clientCardBlocked);
         card.setSize(480, 300);
         card.setLocation(50, 110);
@@ -116,6 +119,7 @@ public class CardPage extends JPanel implements MouseListener {
         add(copyToClipboardBtn);
         
         blockUnblockCardbtn = new JLabel(this.clientCardBlocked == false?"   Lost your Card? Block it now":"   Found your Card? Unblock it now");
+        blockUnblockCardbtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         blockUnblockCardbtn.setIcon(new ImageIcon(CardPage.class.getResource(this.clientCardBlocked?"/images/icons8-lock-30.png":"/images/icons8-unlock-30-2.png")));
         blockUnblockCardbtn.setFont(new Font("Tahoma", Font.PLAIN, 16));
         blockUnblockCardbtn.setBounds(75, 555, 372, 30);
@@ -225,7 +229,6 @@ public class CardPage extends JPanel implements MouseListener {
 			myConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/banking_app","root","");
 			stmt = myConn.createStatement();
 			stmt.executeUpdate("UPDATE `cards` SET blocked = "+ val + " WHERE id_client = "+this.userID+"");
-			System.out.println("UPDATE `cards` SET blocked = "+ val + " WHERE id_client = "+this.userID+"");
 		}
 		catch (Exception exc) {
 			exc.printStackTrace();
